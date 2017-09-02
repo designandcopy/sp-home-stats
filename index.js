@@ -1,14 +1,9 @@
 const scrapeIt = require("scrape-it")
 
-const mainContentAreaSelectors = {
-  // selector for articles with teaser
-  hasTeaser: "#content-main .teaser .article-title",
-  // selector for articles with no teaser
-  noTeaser: "#content-main .teaser .article-list li"
-}
-
 const allarticles =
-  mainContentAreaSelectors.hasTeaser + "," + mainContentAreaSelectors.noTeaser
+  "#content-main .teaser .article-title" +
+  "," +
+  "#content-main .teaser .article-list li"
 
 const scrapeSpiegelOnlineHome = scrapeIt(
   "http://spiegel.de",
@@ -58,10 +53,10 @@ const scrapeSpiegelOnlineHome = scrapeIt(
           attr: "data-lp-article-id"
         }
       }
-		},
-		sidebar: {
-			listItem: ".column-small .asset-box li > a.spiegelplus",
-			data: {
+    },
+    sidebar: {
+      listItem: ".column-small .asset-box li > a.spiegelplus",
+      data: {
         location: {
           attr: "href"
         },
@@ -73,7 +68,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
           attr: "data-lp-article-id"
         }
       }
-		}
+    }
   },
   (err, page) => {
     // send the scraped info to the parser function
@@ -101,10 +96,10 @@ formatData = data => {
       paidcontent: true,
       retrieved
     })
-	)
+  )
 
-	// process sidebar
-		const articlesSidebar= data.sidebar.map((article, i) =>
+  // process sidebar
+  const articlesSidebar = data.sidebar.map((article, i) =>
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
@@ -120,6 +115,7 @@ formatData = data => {
   // )
 
   console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
   console.log("MAIN ARTICLE AREA:")
   console.log("---------------------------------------------")
 
@@ -129,15 +125,17 @@ formatData = data => {
   })
 
   console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
   console.log("SPIEGEL PLUS MODULE BOX:")
   console.log("---------------------------------------------")
 
   articlesPlusModuleBox.map(article => {
     console.log(article)
     console.log("---------------------------------------------")
-	})
+  })
 
-	console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
   console.log("SPIEGEL PLUS SIDEBAR WIDGET:")
   console.log("---------------------------------------------")
 
