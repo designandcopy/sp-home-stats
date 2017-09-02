@@ -47,16 +47,16 @@ const scrapeSpiegelOnlineHome = scrapeIt(
       listItem:
         "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
       data: {
-				location: {
-					attr: "href"
-				},
+        location: {
+          attr: "href"
+        },
         // the core bit of the headline
         headline: ".headline",
         // the prefix part of the headline
         headlineintro: ".headline-intro",
         articleID: {
           attr: "data-lp-article-id"
-        },
+        }
       }
     }
   },
@@ -67,17 +67,25 @@ const scrapeSpiegelOnlineHome = scrapeIt(
 )
 
 formatData = data => {
-	const retrieved = new Date () // timestamp
+  const retrieved = new Date() // timestamp
 
   // add index, flag paid, add timestamp
   const articlesMainArea = data.mainContentArea.map((article, i) => {
-		const paidcontent = article.articleID > 0 || article.classnames != undefined
-    return Object.assign({}, article, { position: i + 1, paidcontent, retrieved })
+    const paidcontent = article.articleID > 0 || article.classnames != undefined
+    return Object.assign({}, article, {
+      position: i + 1,
+      paidcontent,
+      retrieved
+    })
   })
 
   // add index, flag paid, add timestamp
   const articlesPlusModuleBox = data.plusmodulebox.map((article, i) =>
-    Object.assign({}, article, { position: i + 1, paidcontent: true, retrieved })
+    Object.assign({}, article, {
+      position: i + 1,
+      paidcontent: true,
+      retrieved
+    })
   )
 
   /* filtering the results for SpiegelPlus articles only */
@@ -94,15 +102,14 @@ formatData = data => {
   articlesMainArea.map(article => {
     console.log(article)
     console.log("---------------------------------------------")
-	})
+  })
 
-	console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
   console.log("SPIEGEL PLUS MODULE BOX:")
-	console.log("---------------------------------------------")
+  console.log("---------------------------------------------")
 
-	articlesPlusModuleBox.map(article => {
+  articlesPlusModuleBox.map(article => {
     console.log(article)
     console.log("---------------------------------------------")
-	})
-
+  })
 }
