@@ -1,59 +1,108 @@
 const scrapeIt = require("scrape-it")
 
+const mainContentAreaSelectors = {
+  // selector for articles with teaser
+  hasTeaser: "#content-main .teaser .article-title",
+  // selector for articles with no teaser
+  noTeaser: "#content-main .teaser .article-list li"
+}
+
+const allarticles =
+  mainContentAreaSelectors.hasTeaser + "," + mainContentAreaSelectors.noTeaser
+
 const scrapeSpiegelOnlineHome = scrapeIt(
   "http://spiegel.de",
   {
     // get all posts
-    mainposts: {
-      listItem: "#js-column-dynamic-ref .article-title",
+    mainContentArea: {
+      listItem: allarticles,
+      name: "links",
       data: {
+        location: {
+          selector: "a",
+          attr: "href"
+        },
         // the prefix part of the headline
-        intro: ".article-title .headline-intro",
+        headlineintro: ".headline-intro, .asset-headline-intro",
         // the core bit of the headline
-        title: ".article-title .headline",
+        headline: ".headline, .asset-headline",
+        titleattribute: {
+          selector: "a",
+          attr: "title"
+        },
         articleID: {
           selector: ".spiegelplus",
-          // this data attribute handily contains the LP article ID
+          // this data attr contains the LP article ID
           attr: "data-lp-article-id"
+        },
+        classnames: {
+          selector: ".spiegelplus",
+          // premium articles without teaser lack the data attr
+          attr: "class"
         }
       }
     },
     // get the spiegel plus module box
     plusmodulebox: {
-      listItem: ".module-box.spiegelplus .spiegelplus.js-lp-article-link",
+      listItem:
+        "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
       data: {
-        // the prefix part of the headline
-        intro: ".headline-intro",
+				location: {
+					attr: "href"
+				},
         // the core bit of the headline
-        title: ".headline",
+        headline: ".headline",
+        // the prefix part of the headline
+        headlineintro: ".headline-intro",
         articleID: {
           attr: "data-lp-article-id"
-        }
+        },
       }
     }
   },
   (err, page) => {
     // send the scraped info to the parser function
-    parseScrapedArticleTitles(err || page)
+    formatData(err || page)
   }
 )
 
-parseScrapedArticleTitles = data => {
-  // main articles
-  const result = data.mainposts.map((article, i) =>
-    Object.assign({}, article, { position: i + 1 })
-  )
-  const onlySpiegelPlus = result.filter(stuff => stuff.articleID > 0)
+formatData = data => {
+	const retrieved = new Date () // timestamp
 
-  // spiegel plus module box
-  const result2 = data.plusmodulebox.map((article, i) =>
-    Object.assign({}, article, { position: i + 1 })
+  // add index, flag paid, add timestamp
+  const articlesMainArea = data.mainContentArea.map((article, i) => {
+		const paidcontent = article.articleID > 0 || article.classnames != undefined
+    return Object.assign({}, article, { position: i + 1, paidcontent, retrieved })
+  })
+
+  // add index, flag paid, add timestamp
+  const articlesPlusModuleBox = data.plusmodulebox.map((article, i) =>
+    Object.assign({}, article, { position: i + 1, paidcontent: true, retrieved })
   )
 
-  console.log("MAIN CONTENT")
-  console.log("----------------------------")
-  console.log(onlySpiegelPlus)
-  console.log("SPIEGEL PLUS MODULE BOX")
-  console.log("----------------------------")
-  console.log(result2)
+  /* filtering the results for SpiegelPlus articles only */
+
+  // get just the paid articles in the "main content area"
+  // const mainPlusArticles = mainArticlesWithIndex.filter(
+  //   article => article.articleID > 0 || article.classnames != undefined
+  // )
+
+  console.log("---------------------------------------------")
+  console.log("MAIN ARTICLE AREA:")
+  console.log("---------------------------------------------")
+
+  articlesMainArea.map(article => {
+    console.log(article)
+    console.log("---------------------------------------------")
+	})
+
+	console.log("---------------------------------------------")
+  console.log("SPIEGEL PLUS MODULE BOX:")
+	console.log("---------------------------------------------")
+
+	articlesPlusModuleBox.map(article => {
+    console.log(article)
+    console.log("---------------------------------------------")
+	})
+
 }
