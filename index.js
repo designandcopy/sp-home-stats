@@ -58,7 +58,22 @@ const scrapeSpiegelOnlineHome = scrapeIt(
           attr: "data-lp-article-id"
         }
       }
-    }
+		},
+		sidebar: {
+			listItem: ".column-small .asset-box li > a.spiegelplus",
+			data: {
+        location: {
+          attr: "href"
+        },
+        // the core bit of the headline
+        headline: ".asset-headline",
+        // the prefix part of the headline
+        headlineintro: ".asset-headline-intro",
+        articleID: {
+          attr: "data-lp-article-id"
+        }
+      }
+		}
   },
   (err, page) => {
     // send the scraped info to the parser function
@@ -69,7 +84,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
 formatData = data => {
   const retrieved = new Date() // timestamp
 
-  // add index, flag paid, add timestamp
+  // process main articles
   const articlesMainArea = data.mainContentArea.map((article, i) => {
     const paidcontent = article.articleID > 0 || article.classnames != undefined
     return Object.assign({}, article, {
@@ -79,8 +94,17 @@ formatData = data => {
     })
   })
 
-  // add index, flag paid, add timestamp
+  // process spiegel plus module container in main area
   const articlesPlusModuleBox = data.plusmodulebox.map((article, i) =>
+    Object.assign({}, article, {
+      position: i + 1,
+      paidcontent: true,
+      retrieved
+    })
+	)
+
+	// process sidebar
+		const articlesSidebar= data.sidebar.map((article, i) =>
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
@@ -109,6 +133,15 @@ formatData = data => {
   console.log("---------------------------------------------")
 
   articlesPlusModuleBox.map(article => {
+    console.log(article)
+    console.log("---------------------------------------------")
+	})
+
+	console.log("---------------------------------------------")
+  console.log("SPIEGEL PLUS SIDEBAR WIDGET:")
+  console.log("---------------------------------------------")
+
+  articlesSidebar.map(article => {
     console.log(article)
     console.log("---------------------------------------------")
   })
