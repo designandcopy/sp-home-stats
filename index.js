@@ -21,10 +21,6 @@ const scrapeSpiegelOnlineHome = scrapeIt(
         headlineintro: ".headline-intro, .asset-headline-intro",
         // the core bit of the headline
         headline: ".headline, .asset-headline",
-        titleattribute: {
-          selector: "a",
-          attr: "title"
-        },
         articleID: {
           selector: ".spiegelplus",
           // this data attr contains the LP article ID
