@@ -73,14 +73,12 @@ const scrapeSpiegelOnlineHome = scrapeIt(
 )
 
 formatData = data => {
+  // timestamp
   const prettyDate = () => {
-		const now = new Date()
-		return now.toISOString()
-	}
-
-	const retrieved = prettyDate()
-
-	// timestamp
+    const now = new Date()
+    return now.toISOString()
+  }
+  const retrieved = prettyDate()
 
   // process main articles
   const articlesMainArea = data.mainContentArea.map((article, i) => {
