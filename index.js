@@ -73,7 +73,14 @@ const scrapeSpiegelOnlineHome = scrapeIt(
 )
 
 formatData = data => {
-  const retrieved = new Date() // timestamp
+  const prettyDate = () => {
+		const now = new Date()
+		return now.toISOString()
+	}
+
+	const retrieved = prettyDate()
+
+	// timestamp
 
   // process main articles
   const articlesMainArea = data.mainContentArea.map((article, i) => {
@@ -106,6 +113,13 @@ formatData = data => {
     })
   )
 
+  const finalData = Object.assign(
+    {},
+    articlesSidebar,
+    articlesPlusModuleBox,
+    articlesMainArea
+  )
+
   /* filtering the results for SpiegelPlus articles only */
 
   // get just the paid articles in the "main content area"
@@ -113,33 +127,5 @@ formatData = data => {
   //   article => article.articleID > 0 || article.classnames != undefined
   // )
 
-  console.log("---------------------------------------------")
-  console.log("---------------------------------------------")
-  console.log("MAIN ARTICLE AREA:")
-  console.log("---------------------------------------------")
-
-  articlesMainArea.map(article => {
-    console.log(article)
-    console.log("---------------------------------------------")
-  })
-
-  console.log("---------------------------------------------")
-  console.log("---------------------------------------------")
-  console.log("SPIEGEL PLUS MODULE BOX:")
-  console.log("---------------------------------------------")
-
-  articlesPlusModuleBox.map(article => {
-    console.log(article)
-    console.log("---------------------------------------------")
-  })
-
-  console.log("---------------------------------------------")
-  console.log("---------------------------------------------")
-  console.log("SPIEGEL PLUS SIDEBAR WIDGET:")
-  console.log("---------------------------------------------")
-
-  articlesSidebar.map(article => {
-    console.log(article)
-    console.log("---------------------------------------------")
-  })
+  console.log(finalData)
 }
