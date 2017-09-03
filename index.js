@@ -14,14 +14,14 @@ const scrapeSpiegelOnlineHome = scrapeIt(
       listItem: allarticles,
       name: "links",
       data: {
-        location: {
+        url: {
           selector: "a",
           attr: "href"
         },
-        // the prefix part of the headline
-        headlineintro: ".headline-intro, .asset-headline-intro",
         // the core bit of the headline
         headline: ".headline, .asset-headline",
+        // the prefix part of the headline
+        headlineintro: ".headline-intro, .asset-headline-intro",
         articleID: {
           selector: ".spiegelplus",
           // this data attr contains the LP article ID
@@ -39,7 +39,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
       listItem:
         "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
       data: {
-        location: {
+        url: {
           attr: "href"
         },
         // the core bit of the headline
@@ -54,7 +54,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
     postsInSideBarWidget: {
       listItem: ".column-small .asset-box li > a.spiegelplus",
       data: {
-        location: {
+        url: {
           attr: "href"
         },
         // the core bit of the headline
@@ -83,47 +83,56 @@ formatData = data => {
 
   // process main articles
   const dataMainArea = data.postsInMainContent.map((article, i) => {
+		const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
+		const fallbackArticleID = getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
     const paidcontent = article.articleID > 0 || article.classnames != undefined
-    return Object.assign({}, article, {
-      position: i + 1,
-      paidcontent,
-      retrieved,
-      area: "main"
-    })
+    return Object.assign(
+      {},
+			article,
+      {
+				position: i + 1,
+				articleid: fallbackArticleID,
+        paidcontent,
+        retrieved,
+        area: "main"
+      }
+    )
   })
 
   // process spiegel plus module container in main area
-  const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) =>
-    Object.assign({}, article, {
-      position: i + 1,
-      paidcontent: true,
-      retrieved,
-      area: "spiegel plus modulebox"
-    })
-  )
+  const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) => {
+  return Object.assign(
+      {},
+			article,
+      {
+        position: i + 1,
+        paidcontent: true,
+        retrieved,
+        area: "spiegel plus modulebox"
+      }
+    )
+  })
 
   // process sidebar
-  const dataSidebar = data.postsInSideBarWidget.map((article, i) =>
-    Object.assign({}, article, {
-      position: i + 1,
-      paidcontent: true,
-      retrieved,
-      area: "sidebar"
-    })
-  )
+  const dataSidebar = data.postsInSideBarWidget.map((article, i) => {
+    let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
+    return Object.assign(
+      {},
+			article,
+      {
+        position: i + 1,
+        articleid: fallbackArticleID,
+        paidcontent: true,
+        retrieved,
+        area: "sidebar"
+      }
+    )
+  })
 
-	let finalData = {}
+  const collectedData = []
+	collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
 
-	finalData.sidebar = dataSidebar
-  finalData.modulebox = dataPlusModuleBox
-  finalData.mainarea = dataMainArea
+  const finalData = [].concat(...collectedData)
 
-  exportData(JSON.stringify(finalData))
-}
-
-exportData = (data) => {
-	fs.appendFile('output.json', data, (err) => {
-		if (err) throw err;
-		console.log('The JSON Output was appended to file!');
-	});
+  console.log(JSON.stringify(finalData))
 }
