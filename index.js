@@ -81,7 +81,8 @@ formatData = data => {
     return Object.assign({}, article, {
       position: i + 1,
       paidcontent,
-      retrieved
+      retrieved,
+      area: "main"
     })
   })
 
@@ -90,7 +91,8 @@ formatData = data => {
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
-      retrieved
+      retrieved,
+      area: "spiegel plus modulebox"
     })
   )
 
@@ -99,7 +101,8 @@ formatData = data => {
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
-      retrieved
+      retrieved,
+      area: "sidebar"
     })
   )
 
