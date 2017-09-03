@@ -1,4 +1,5 @@
 const scrapeIt = require("scrape-it")
+const fs = require("fs")
 
 const allarticles =
   "#content-main .teaser .article-title" +
@@ -111,12 +112,18 @@ formatData = data => {
     })
   )
 
-  const finalData = Object.assign(
-    {},
-    dataSidebar,
-    dataPlusModuleBox,
-    dataMainArea
-  )
+	let finalData = {}
 
-  console.log(finalData)
+	finalData.sidebar = dataSidebar
+  finalData.modulebox = dataPlusModuleBox
+  finalData.mainarea = dataMainArea
+
+  exportData(JSON.stringify(finalData))
+}
+
+exportData = (data) => {
+	fs.appendFile('output.json', data, (err) => {
+		if (err) throw err;
+		console.log('The JSON Output was appended to file!');
+	});
 }
