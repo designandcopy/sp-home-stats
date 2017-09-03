@@ -9,7 +9,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
   "http://spiegel.de",
   {
     // get all posts
-    mainContentArea: {
+    postsInMainContent: {
       listItem: allarticles,
       name: "links",
       data: {
@@ -34,7 +34,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
       }
     },
     // get the spiegel plus module box
-    plusmodulebox: {
+    postsInPlusModuleBox: {
       listItem:
         "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
       data: {
@@ -50,7 +50,7 @@ const scrapeSpiegelOnlineHome = scrapeIt(
         }
       }
     },
-    sidebar: {
+    postsInSideBarWidget: {
       listItem: ".column-small .asset-box li > a.spiegelplus",
       data: {
         location: {
@@ -81,7 +81,7 @@ formatData = data => {
   const retrieved = prettyDate()
 
   // process main articles
-  const articlesMainArea = data.mainContentArea.map((article, i) => {
+  const dataMainArea = data.postsInMainContent.map((article, i) => {
     const paidcontent = article.articleID > 0 || article.classnames != undefined
     return Object.assign({}, article, {
       position: i + 1,
@@ -92,7 +92,7 @@ formatData = data => {
   })
 
   // process spiegel plus module container in main area
-  const articlesPlusModuleBox = data.plusmodulebox.map((article, i) =>
+  const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) =>
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
@@ -102,7 +102,7 @@ formatData = data => {
   )
 
   // process sidebar
-  const articlesSidebar = data.sidebar.map((article, i) =>
+  const dataSidebar = data.postsInSideBarWidget.map((article, i) =>
     Object.assign({}, article, {
       position: i + 1,
       paidcontent: true,
@@ -113,9 +113,9 @@ formatData = data => {
 
   const finalData = Object.assign(
     {},
-    articlesSidebar,
-    articlesPlusModuleBox,
-    articlesMainArea
+    dataSidebar,
+    dataPlusModuleBox,
+    dataMainArea
   )
 
   console.log(finalData)
