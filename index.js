@@ -1,6 +1,11 @@
 const scrapeIt = require("scrape-it")
 const fs = require("fs")
 
+const csv = require("ya-csv")
+const writer = csv.createCsvStreamWriter(
+  fs.createWriteStream("output.csv", { flags: "a" })
+)
+
 const allarticles =
   "#content-main .teaser .article-title" +
   "," +
@@ -83,56 +88,75 @@ formatData = data => {
 
   // process main articles
   const dataMainArea = data.postsInMainContent.map((article, i) => {
-		const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
-		const fallbackArticleID = getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
+    const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
+    const fallbackArticleID =
+      getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
     const paidcontent = article.articleID > 0 || article.classnames != undefined
-    return Object.assign(
-      {},
-			article,
-      {
-				position: i + 1,
-				articleid: fallbackArticleID,
-        paidcontent,
-        retrieved,
-        area: "main"
-      }
-    )
+    return Object.assign({}, article, {
+      position: i + 1,
+      articleid: fallbackArticleID,
+      paidcontent,
+      retrieved,
+      area: "main"
+    })
   })
 
   // process spiegel plus module container in main area
   const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) => {
-  return Object.assign(
-      {},
-			article,
-      {
-        position: i + 1,
-        paidcontent: true,
-        retrieved,
-        area: "spiegel plus modulebox"
-      }
-    )
+		let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
+    return Object.assign({}, article, {
+      position: i + 1,
+			articleid: fallbackArticleID,
+      paidcontent: true,
+      retrieved,
+      area: "spiegel plus modulebox"
+    })
   })
 
   // process sidebar
   const dataSidebar = data.postsInSideBarWidget.map((article, i) => {
     let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
-    return Object.assign(
-      {},
-			article,
-      {
-        position: i + 1,
-        articleid: fallbackArticleID,
-        paidcontent: true,
-        retrieved,
-        area: "sidebar"
-      }
-    )
+    return Object.assign({}, article, {
+      position: i + 1,
+      articleid: fallbackArticleID,
+      paidcontent: true,
+      retrieved,
+      area: "sidebar"
+    })
   })
 
   const collectedData = []
-	collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
+  collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
 
   const finalData = [].concat(...collectedData)
 
-  console.log(JSON.stringify(finalData))
+  // initialize CSV file with headers
+  const initCSVHeaders = () =>
+    writer.writeRecord([
+      "url",
+      "headline",
+      "headlineintro",
+      "position",
+      "articleid",
+      "paidcontent",
+      "retrieved",
+      "area"
+    ])
+
+	initCSVHeaders()
+
+  finalData.map(item => {
+    const result = []
+    result.push(
+      item.url,
+      item.headline,
+      item.headlineintro,
+      item.position,
+      item.articleid,
+      item.paidcontent,
+      item.retrieved,
+      item.area
+    )
+    writer.writeRecord(result)
+  })
 }
