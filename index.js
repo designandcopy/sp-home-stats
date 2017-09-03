@@ -120,12 +120,5 @@ formatData = data => {
     articlesMainArea
   )
 
-  /* filtering the results for SpiegelPlus articles only */
-
-  // get just the paid articles in the "main content area"
-  // const mainPlusArticles = mainArticlesWithIndex.filter(
-  //   article => article.articleID > 0 || article.classnames != undefined
-  // )
-
   console.log(finalData)
 }
