@@ -1,19 +1,17 @@
 const scrapeIt = require("scrape-it")
 const fs = require("fs")
-
 const csv = require("ya-csv")
-const writer = csv.createCsvStreamWriter(
-  fs.createWriteStream("output.csv", { flags: "a" })
-)
 
+// selectors for articles that have a teaser
+// and articles which are just compact links
 const allarticles =
   "#content-main .teaser .article-title" +
   "," +
   "#content-main .teaser .article-list li"
 
-const scrapeSpiegelOnlineHome = scrapeIt(
-  "http://spiegel.de",
-  {
+const scraperConfig = {
+  site: "http://spiegel.de",
+  selectors: {
     // get all posts
     postsInMainContent: {
       listItem: allarticles,
@@ -71,50 +69,53 @@ const scrapeSpiegelOnlineHome = scrapeIt(
         }
       }
     }
-  },
-  (err, page) => {
-    // send the scraped info to the parser function
-    formatData(err || page)
   }
-)
+}
 
-formatData = data => {
+const processScrapedData = scrapedData => {
   // timestamp
-  const prettyDate = () => {
+  function generateTimestamp () {
     const now = new Date()
     return now.toISOString()
   }
-  const retrieved = prettyDate()
+  const retrieved = generateTimestamp()
 
   // process main articles
-  const dataMainArea = data.postsInMainContent.map((article, i) => {
+  const dataMainArea = scrapedData.postsInMainContent.map((article, i) => {
+    // paid content has a data attr for the article ID
+    // or a .spiegelplus CSS class
+    const isPaidContent =
+      article.articleID > 0 || article.classnames != undefined
+    // we can also extract the article ID from the html filename
     const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
+    // ...and use that as a fallback
     const fallbackArticleID =
       getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
-    const paidcontent = article.articleID > 0 || article.classnames != undefined
     return Object.assign({}, article, {
       position: i + 1,
       articleid: fallbackArticleID,
-      paidcontent,
+      paidcontent: isPaidContent,
       retrieved,
       area: "main"
     })
   })
 
   // process spiegel plus module container in main area
-  const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) => {
-		let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
-    return Object.assign({}, article, {
-      position: i + 1,
-			articleid: fallbackArticleID,
-      paidcontent: true,
-      retrieved,
-      area: "spiegel plus modulebox"
-    })
-  })
+  const dataPlusModuleBox = scrapedData.postsInPlusModuleBox.map(
+    (article, i) => {
+      let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
+      return Object.assign({}, article, {
+        position: i + 1,
+        articleid: fallbackArticleID,
+        paidcontent: true,
+        retrieved,
+        area: "spiegel plus modulebox"
+      })
+    }
+  )
 
   // process sidebar
-  const dataSidebar = data.postsInSideBarWidget.map((article, i) => {
+  const dataSidebar = scrapedData.postsInSideBarWidget.map((article, i) => {
     let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
     return Object.assign({}, article, {
       position: i + 1,
@@ -127,36 +128,99 @@ formatData = data => {
 
   const collectedData = []
   collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
+  const result = [].concat(...collectedData)
 
-  const finalData = [].concat(...collectedData)
-
-  // initialize CSV file with headers
-  const initCSVHeaders = () =>
-    writer.writeRecord([
-      "url",
-      "headline",
-      "headlineintro",
-      "position",
-      "articleid",
-      "paidcontent",
-      "retrieved",
-      "area"
-    ])
-
-	initCSVHeaders()
-
-  finalData.map(item => {
-    const result = []
-    result.push(
-      item.url,
-      item.headline,
-      item.headlineintro,
-      item.position,
-      item.articleid,
-      item.paidcontent,
-      item.retrieved,
-      item.area
-    )
-    writer.writeRecord(result)
-  })
+  return result
 }
+
+// configure csv output stream
+const writer = csv.createCsvStreamWriter(
+  fs.createWriteStream("output.csv", { flags: "a" })
+)
+
+// initialize CSV file with headers
+const initCSVHeaders = () => {
+  writer.writeRecord([
+    "url",
+    "headline",
+    "headlineintro",
+    "position",
+    "articleid",
+    "paidcontent",
+    "retrieved",
+    "area"
+  ])
+}
+
+// this only needs to happen once with a fresh file
+initCSVHeaders()
+
+
+function exportDataSample() {
+	let firstRun = true
+
+  // returns boolean
+  function isNewData(oldItem, newItem) {
+		const compareObjects = JSON.stringify(oldItem) === JSON.stringify(newItem)
+    return !compareObjects
+  }
+
+  // recursively runs function with data for comparison
+  function restartProcess(payload) {
+    setTimeout(() => scrapeAndWrite(payload), 3000)
+  }
+
+  function writeData(data) {
+    // generate array to feed CSV writer
+    const csvReadyData = processScrapedData(data)
+    csvReadyData.map(item => {
+      const result = []
+      result.push(
+        item.url,
+        item.headline,
+        item.headlineintro,
+        item.position,
+        item.articleid,
+        item.paidcontent,
+        item.retrieved,
+        item.area
+      )
+      writer.writeRecord(result)
+    })
+  }
+
+  function handleData(input, oldData) {
+    // console.log("data scraped")
+
+		const freshData = isNewData(input, oldData)
+
+    if (firstRun) {
+      console.log(Date(),"first run, writing data")
+      writeData(input)
+      oldData = input
+      firstRun = false
+      console.log("first run disabled, cached results")
+    }
+
+    if (!firstRun && freshData) {
+      console.log(Date(), "data changed, writing results")
+			writeData(input)
+			oldData = input
+      restartProcess(oldData)
+    } else if (!freshData){
+      console.log("no new data, restarting")
+      restartProcess(input)
+		} else {console.log("error")}
+
+  }
+
+  function scrapeAndWrite(oldData) {
+    scrapeIt(scraperConfig.site, scraperConfig.selectors).then(rawData =>
+      handleData(rawData, oldData)
+    )
+  }
+
+  scrapeAndWrite()
+}
+
+exportDataSample()
