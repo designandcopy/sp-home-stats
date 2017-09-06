@@ -101,6 +101,8 @@ function exportDataSample() {
 // start data collection
 //exportDataSample()
 
-scrapeIt(config.site, config.selectors).then(rawData =>
+const testScraper = () => scrapeIt(config.site, config.selectors).then(rawData =>
 	console.log(processScrapedData(rawData))
 )
+
+testScraper()
