@@ -1,152 +1,11 @@
-const scrapeIt = require("scrape-it")
-const fs = require("fs")
 const csv = require("ya-csv")
+const fs = require("fs")
+const scrapeIt = require("scrape-it")
 
-// selectors for articles that have a teaser
-// and articles which are just compact links
-const allarticles =
-  "#content-main .teaser .article-title" +
-  "," +
-  "#content-main .teaser .article-list li"
-
-const scraperConfig = {
-  site: "http://spiegel.de",
-  selectors: {
-    // get all posts
-    postsInMainContent: {
-      listItem: allarticles,
-      name: "links",
-      data: {
-        url: {
-          selector: "a",
-          attr: "href"
-        },
-        // the core bit of the headline
-        headline: ".headline, .asset-headline",
-        // the prefix part of the headline
-        headlineintro: ".headline-intro, .asset-headline-intro",
-        articleID: {
-          selector: ".spiegelplus",
-          // this data attr contains the LP article ID
-          attr: "data-lp-article-id"
-        },
-        classnames: {
-          selector: ".headline, .asset-headline",
-          // premium articles without teaser lack the data attr
-          attr: "class"
-        },
-        premiumclassnames: {
-          selector: ".spiegelplus",
-          // premium articles without teaser lack the data attr
-          attr: "class"
-        }
-      }
-    },
-    // get the spiegel plus module box
-    postsInPlusModuleBox: {
-      listItem:
-        "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
-      data: {
-        url: {
-          attr: "href"
-        },
-        // the core bit of the headline
-        headline: ".headline",
-        // the prefix part of the headline
-        headlineintro: ".headline-intro",
-        articleID: {
-          attr: "data-lp-article-id"
-        },
-        classnames: {
-          selector: ".headline, .asset-headline",
-          // premium articles without teaser lack the data attr
-          attr: "class"
-        }
-      }
-    },
-    postsInSideBarWidget: {
-      listItem: ".column-small .asset-box li > a.spiegelplus",
-      data: {
-        url: {
-          attr: "href"
-        },
-        // the core bit of the headline
-        headline: ".asset-headline",
-        // the prefix part of the headline
-        headlineintro: ".asset-headline-intro",
-        articleID: {
-          attr: "data-lp-article-id"
-        }
-      }
-    }
-  }
-}
-
-const processScrapedData = scrapedData => {
-  // timestamp
-  function generateTimestamp() {
-    const now = new Date()
-    return now.toISOString()
-  }
-  const retrieved = generateTimestamp()
-
-  // process main articles
-  const dataMainArea = scrapedData.postsInMainContent.map((article, i) => {
-    // paid content has a data attr for the article ID
-    // or a .spiegelplus CSS class
-    const isPaidContent =
-      article.articleID > 0 || article.premiumclassnames != undefined
-    // we can also extract the article ID from the html filename
-    const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
-    // ...and use that as a fallback
-    const fallbackArticleID =
-      getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
-    // also we want to know if it's a small link or has a teaser
-    const hasTeaser = article.classnames.indexOf("asset") === -1
-    return Object.assign({}, article, {
-      position: i + 1,
-      articleid: fallbackArticleID,
-      paidcontent: isPaidContent,
-      hasTeaser,
-      retrieved,
-      area: "main"
-    })
-  })
-
-  // process spiegel plus module container in main area
-  const dataPlusModuleBox = scrapedData.postsInPlusModuleBox.map(
-    (article, i) => {
-      let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
-      return Object.assign({}, article, {
-        position: i + 1,
-        articleid: fallbackArticleID,
-        paidcontent: true,
-        hasTeaser: "unknown", //TODO
-        retrieved,
-        area: "spiegel plus modulebox"
-      })
-    }
-  )
-
-  // process sidebar
-  const dataSidebar = scrapedData.postsInSideBarWidget.map((article, i) => {
-    let fallbackArticleID = article.url.match(/\d{6,}(?=\.html)/)
-    return Object.assign({}, article, {
-      position: i + 1,
-      articleid: fallbackArticleID,
-      paidcontent: true,
-      hasTeaser: "unknown", //TODO
-      retrieved,
-      area: "sidebar"
-    })
-  })
-
-  const collectedData = []
-  collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
-  const result = [].concat(...collectedData)
-
-  return result
-}
+// import scraper css selector configuration
+const config = require("./modules/config")
+// import methods to transform scraped data before writing
+const processScrapedData = require("./modules/transformers")
 
 // configure csv output stream
 const writer = csv.createCsvStreamWriter(
@@ -168,10 +27,12 @@ const initCSVHeaders = () => {
   ])
 }
 
+// main function
 function exportDataSample() {
+	// flag for writing CSV headers on first run
   let firstRun = true
 
-  // returns boolean
+  // string comparison of scraped data, returns boolean
   function isNewData(oldItem, newItem) {
     const compareObjects = JSON.stringify(oldItem) === JSON.stringify(newItem)
     return !compareObjects
@@ -226,7 +87,7 @@ function exportDataSample() {
   }
 
   function scrapeAndWrite(oldData, firstRun) {
-    scrapeIt(scraperConfig.site, scraperConfig.selectors).then(rawData =>
+    scrapeIt(config.site, config.selectors).then(rawData =>
       handleData(rawData, oldData, firstRun)
     )
   }
@@ -235,6 +96,11 @@ function exportDataSample() {
 }
 
 // this only needs to happen once with a fresh file
-initCSVHeaders()
+//initCSVHeaders()
+
 // start data collection
-exportDataSample()
+//exportDataSample()
+
+scrapeIt(config.site, config.selectors).then(rawData =>
+	console.log(processScrapedData(rawData))
+)
