@@ -31,6 +31,11 @@ const scraperConfig = {
           attr: "data-lp-article-id"
         },
         classnames: {
+          selector: ".headline, .asset-headline",
+          // premium articles without teaser lack the data attr
+          attr: "class"
+        },
+        premiumclassnames: {
           selector: ".spiegelplus",
           // premium articles without teaser lack the data attr
           attr: "class"
@@ -51,6 +56,11 @@ const scraperConfig = {
         headlineintro: ".headline-intro",
         articleID: {
           attr: "data-lp-article-id"
+        },
+        classnames: {
+          selector: ".headline, .asset-headline",
+          // premium articles without teaser lack the data attr
+          attr: "class"
         }
       }
     },
@@ -74,7 +84,7 @@ const scraperConfig = {
 
 const processScrapedData = scrapedData => {
   // timestamp
-  function generateTimestamp () {
+  function generateTimestamp() {
     const now = new Date()
     return now.toISOString()
   }
@@ -85,16 +95,19 @@ const processScrapedData = scrapedData => {
     // paid content has a data attr for the article ID
     // or a .spiegelplus CSS class
     const isPaidContent =
-      article.articleID > 0 || article.classnames != undefined
+      article.articleID > 0 || article.premiumclassnames != undefined
     // we can also extract the article ID from the html filename
     const getArticleIDFromURL = article.url.match(/\d{6,}(?=\.html)/)
     // ...and use that as a fallback
     const fallbackArticleID =
       getArticleIDFromURL != null ? getArticleIDFromURL.toString() : undefined
+    // also we want to know if it's a small link or has a teaser
+    const hasTeaser = article.classnames.indexOf("asset") === -1
     return Object.assign({}, article, {
       position: i + 1,
       articleid: fallbackArticleID,
       paidcontent: isPaidContent,
+      hasTeaser,
       retrieved,
       area: "main"
     })
@@ -108,6 +121,7 @@ const processScrapedData = scrapedData => {
         position: i + 1,
         articleid: fallbackArticleID,
         paidcontent: true,
+        // hasTeaser,
         retrieved,
         area: "spiegel plus modulebox"
       })
@@ -147,27 +161,24 @@ const initCSVHeaders = () => {
     "position",
     "articleid",
     "paidcontent",
+    "hasTeaser",
     "retrieved",
     "area"
   ])
 }
 
-// this only needs to happen once with a fresh file
-initCSVHeaders()
-
-
 function exportDataSample() {
-	let firstRun = true
+  let firstRun = true
 
   // returns boolean
   function isNewData(oldItem, newItem) {
-		const compareObjects = JSON.stringify(oldItem) === JSON.stringify(newItem)
+    const compareObjects = JSON.stringify(oldItem) === JSON.stringify(newItem)
     return !compareObjects
   }
 
   // recursively runs function with data for comparison
   function restartProcess(payload) {
-    setTimeout(() => scrapeAndWrite(payload), 3000)
+    setTimeout(() => scrapeAndWrite(payload, false), 10000)
   }
 
   function writeData(data) {
@@ -182,6 +193,7 @@ function exportDataSample() {
         item.position,
         item.articleid,
         item.paidcontent,
+        item.hasTeaser,
         item.retrieved,
         item.area
       )
@@ -189,38 +201,39 @@ function exportDataSample() {
     })
   }
 
-  function handleData(input, oldData) {
+  function handleData(input, oldData, firstRun) {
     // console.log("data scraped")
 
-		const freshData = isNewData(input, oldData)
-
+    const freshData = isNewData(input, oldData)
+    console.log("is first run?", firstRun)
     if (firstRun) {
-      console.log(Date(),"first run, writing data")
+      console.log(Date(), "first run, writing data")
       writeData(input)
       oldData = input
-      firstRun = false
+      restartProcess(oldData)
       console.log("first run disabled, cached results")
     }
-
     if (!firstRun && freshData) {
       console.log(Date(), "data changed, writing results")
-			writeData(input)
-			oldData = input
+      writeData(input)
+      oldData = input
       restartProcess(oldData)
-    } else if (!freshData){
+    } else if (!freshData) {
       console.log("no new data, restarting")
       restartProcess(input)
-		} else {console.log("error")}
-
+    }
   }
 
-  function scrapeAndWrite(oldData) {
+  function scrapeAndWrite(oldData, firstRun) {
     scrapeIt(scraperConfig.site, scraperConfig.selectors).then(rawData =>
-      handleData(rawData, oldData)
+      handleData(rawData, oldData, firstRun)
     )
   }
 
-  scrapeAndWrite()
+  scrapeAndWrite(null, true)
 }
 
+// this only needs to happen once with a fresh file
+initCSVHeaders()
+// start data collection
 exportDataSample()
