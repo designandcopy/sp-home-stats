@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "scrape-it": "^3.3.2"
+    "scrape-it": "^3.3.2",
+    "ya-csv": "^0.10.1"
   }
 }
