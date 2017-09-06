@@ -88,7 +88,5 @@ module.exports = function(data) {
 
   const collectedData = []
   collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
-  const result = [].concat(...collectedData)
-
-  return result
+  return [].concat(...collectedData)
 }
