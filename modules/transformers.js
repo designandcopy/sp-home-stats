@@ -1,5 +1,5 @@
 const generateTimestamp = require("./helpers").generateTimestamp
-
+const findSubStr = require("./helpers").findSubStr
 /*
 
 	EXTRACTOR FUNCTIONS
@@ -12,20 +12,12 @@ const getArticleIDFromURL = el => {
   if (el.articleID) {
     return el.articleID
   } else {
-		const extract = el.url.match(/\d{6,}(?=\.html)/)
-		if (extract) {
-			return extract[0]
-		} else {
-			return "external"
-		}
-  }
-}
-
-// checks presence of substring
-// returns bool
-const findSubStr = (item, substr) => {
-  if (item && substr) {
-    return item.indexOf(substr) !== -1
+    const extract = el.url.match(/\d{6,}(?=\.html)/)
+    if (extract) {
+      return extract[0]
+    } else {
+      return "external"
+    }
   }
 }
 
