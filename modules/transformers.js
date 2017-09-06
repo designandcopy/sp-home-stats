@@ -28,7 +28,7 @@ const checkPaid = el => {
   if (el.articleID > 0) {
     return true
   } else {
-    return findSubStr(el.premiumclassnames, ".spiegelplus")
+    return findSubStr(el.premiumclassnames, ".spiegelplus") || false
   }
 }
 
