@@ -3,7 +3,8 @@ module.exports = {
   selectors: {
     // get all posts
     postsInMainContent: {
-			listItem: "#content-main .teaser .article-title, #content-main .teaser .article-list li",
+      listItem:
+        "#content-main .teaser .article-title, #content-main .teaser .article-list li",
       name: "links",
       data: {
         url: {
@@ -33,23 +34,39 @@ module.exports = {
     },
     // get the spiegel plus module box
     postsInPlusModuleBox: {
-      listItem:
-        "#content-main .module-box.spiegelplus .spiegelplus.js-lp-article-link",
+      selector: "#content-main .module-box.spiegelplus",
       data: {
-        url: {
-          attr: "href"
+        hasTeaser: {
+          listItem: ".ressort-teaser-box-top .article-title .js-lp-article-link",
+          name: "hasTeaser",
+          data: {
+            url: {
+              attr: "href"
+            },
+            // the core bit of the headline
+            headline: ".headline",
+            // the prefix part of the headline
+            headlineintro: ".headline-intro",
+            articleID: {
+              attr: "data-lp-article-id"
+            }
+          }
         },
-        // the core bit of the headline
-        headline: ".headline",
-        // the prefix part of the headline
-        headlineintro: ".headline-intro",
-        articleID: {
-          attr: "data-lp-article-id"
-        },
-        classnames: {
-          selector: ".headline, .asset-headline",
-          // premium articles without teaser lack the data attr
-          attr: "class"
+        noTeaser: {
+          listItem: "ul li a",
+          name: "noTeaser",
+          data: {
+            url: {
+              attr: "href"
+            },
+            // the core bit of the headline
+            headline: ".headline",
+            // the prefix part of the headline
+            headlineintro: ".headline-intro",
+            articleID: {
+              attr: "data-lp-article-id"
+            }
+          }
         }
       }
     },
@@ -70,4 +87,3 @@ module.exports = {
     }
   }
 }
-

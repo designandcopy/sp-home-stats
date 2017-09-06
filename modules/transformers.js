@@ -61,17 +61,34 @@ module.exports = function(data) {
   })
 
   // process spiegel plus module container in main area
-  const dataPlusModuleBox = data.postsInPlusModuleBox.map((article, i) => {
-    const fallbackArticleID = getArticleIDFromURL(article)
-    return Object.assign({}, article, {
-      position: i + 1,
-      articleID: fallbackArticleID,
-      paidcontent: true,
-      hasTeaser: "unknown", //TODO
-      retrieved,
-      area: "spiegel plus modulebox"
-    })
-  })
+  const dataPlusModuleBox = data.postsInPlusModuleBox.hasTeaser.map(
+    (article, i) => {
+      const fallbackArticleID = getArticleIDFromURL(article)
+      return Object.assign({}, article, {
+        position: i + 1,
+        articleID: fallbackArticleID,
+        paidcontent: true,
+        hasTeaser: true,
+        retrieved,
+        area: "spiegel plus modulebox"
+      })
+    }
+  )
+
+  // process spiegel plus module container in main area
+  const dataPlusModuleBox2 = data.postsInPlusModuleBox.noTeaser.map(
+    (article, i) => {
+      const fallbackArticleID = getArticleIDFromURL(article)
+      return Object.assign({}, article, {
+        position: i + 1,
+        articleID: fallbackArticleID,
+        paidcontent: true,
+        hasTeaser: false,
+        retrieved,
+        area: "spiegel plus modulebox"
+      })
+    }
+  )
 
   // process sidebar
   const dataSidebar = data.postsInSideBarWidget.map((article, i) => {
@@ -87,6 +104,6 @@ module.exports = function(data) {
   })
 
   const collectedData = []
-  collectedData.push(dataMainArea, dataPlusModuleBox, dataSidebar)
+  collectedData.push(dataMainArea, dataPlusModuleBox, dataPlusModuleBox2, dataSidebar)
   return [].concat(...collectedData)
 }
