@@ -121,7 +121,7 @@ const processScrapedData = scrapedData => {
         position: i + 1,
         articleid: fallbackArticleID,
         paidcontent: true,
-        // hasTeaser,
+        hasTeaser: "unknown", //TODO
         retrieved,
         area: "spiegel plus modulebox"
       })
@@ -135,6 +135,7 @@ const processScrapedData = scrapedData => {
       position: i + 1,
       articleid: fallbackArticleID,
       paidcontent: true,
+      hasTeaser: "unknown", //TODO
       retrieved,
       area: "sidebar"
     })
