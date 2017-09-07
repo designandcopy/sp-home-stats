@@ -53,7 +53,7 @@ function exportDataSample() {
         item.headline,
         item.headlineintro,
         item.position,
-        item.articleid,
+        item.articleID,
         item.paidcontent,
         item.hasTeaser,
         item.retrieved,
