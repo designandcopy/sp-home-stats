@@ -19,7 +19,7 @@ const initCSVHeaders = () => {
     "headline",
     "headlineintro",
     "position",
-    "articleid",
+    "articleID",
     "paidcontent",
     "hasTeaser",
     "retrieved",
@@ -29,7 +29,7 @@ const initCSVHeaders = () => {
 
 // main function
 function exportDataSample() {
-	// flag for writing CSV headers on first run
+  // flag for writing CSV headers on first run
   let firstRun = true
 
   // string comparison of scraped data, returns boolean
@@ -95,14 +95,22 @@ function exportDataSample() {
   scrapeAndWrite(null, true)
 }
 
-// this only needs to happen once with a fresh file
-//initCSVHeaders()
 
-// start data collection
-//exportDataSample()
+const production = true
+const test = false
 
-const testScraper = () => scrapeIt(config.site, config.selectors).then(rawData =>
-	console.log(processScrapedData(rawData))
-)
+if (production) {
+  // this only needs to happen once with a fresh file
+  initCSVHeaders()
 
-testScraper()
+  // start data collection
+  exportDataSample()
+}
+
+if (test) {
+  const testScraper = () =>
+    scrapeIt(config.site, config.selectors).then(rawData =>
+      console.log(processScrapedData(rawData))
+    )
+  testScraper()
+}
