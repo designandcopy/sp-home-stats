@@ -90,6 +90,19 @@ module.exports = function(data) {
     }
   )
 
+	// this combines the plus module box articles
+	// TODO: this only works if teasered articles come first
+	// and breaks if SPON should ever decide to show non-teaser articles
+	// at the top (unlikely)
+  const mergedObjects = [dataPlusModuleBox, dataPlusModuleBox2]
+  const dataPlusModuleBoxMerged = []
+    .concat(...mergedObjects)
+    .map((article, i) => {
+      return Object.assign({}, article, {
+        position: i + 1
+      })
+    })
+
   // process sidebar
   const dataSidebar = data.postsInSideBarWidget.map((article, i) => {
     const fallbackArticleID = getArticleIDFromURL(article)
@@ -104,6 +117,6 @@ module.exports = function(data) {
   })
 
   const collectedData = []
-  collectedData.push(dataMainArea, dataPlusModuleBox, dataPlusModuleBox2, dataSidebar)
+  collectedData.push(dataMainArea, dataPlusModuleBoxMerged, dataSidebar)
   return [].concat(...collectedData)
 }
